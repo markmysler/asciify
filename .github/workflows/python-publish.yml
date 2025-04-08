@@ -43,6 +43,7 @@ jobs:
       - release-build
     permissions:
       id-token: write
+      content: write
 
     environment:
       name: pypi
@@ -59,3 +60,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
+          password: ${{ secrets.PYPI_TOKEN }}
