@@ -46,7 +46,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/asciify
+      url: https://pypi.org/p/asciifyy
 
     steps:
       - name: Retrieve release distributions
