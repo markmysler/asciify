@@ -43,7 +43,6 @@ jobs:
       - release-build
     permissions:
       id-token: write
-      content: write
 
     environment:
       name: pypi
