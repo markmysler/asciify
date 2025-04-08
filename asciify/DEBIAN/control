@@ -1,0 +1,8 @@
+Package: asciify
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3, python3-pillow, python3-colorama
+Maintainer: Mark Mysler <myslermark@gmail.com>
+Description: A tool to convert images into colored ASCII art for terminal output.

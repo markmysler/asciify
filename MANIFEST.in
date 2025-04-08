@@ -1,0 +1,4 @@
+include asciify.py
+include asciify.bat
+include requirements.txt
+include README.md
