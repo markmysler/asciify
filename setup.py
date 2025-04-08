@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='asciify',
+    name='asciifyy',
     version='1.0.0',
     py_modules=['asciify'],
     install_requires=['pillow', 'colorama'],

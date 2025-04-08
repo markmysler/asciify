@@ -15,7 +15,7 @@ Convert images to colored ASCII art in your terminal. This tool transforms any i
 ## Installation
 
 ```bash
-pip install asciify
+pip install asciifyy
 ```
 
 ## Usage
