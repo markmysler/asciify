@@ -7,7 +7,8 @@ from colorama import init
 init(autoreset=True)
 
 # Characters ordered from dark to light
-ASCII_CHARS = r"$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."[::-1]
+ASCII_CHARS_C = r"$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."[::-1]
+ASCII_CHARS_NC= r"abc*. "[::-1]
 
 
 def resize_image(image, new_width=100):
@@ -26,10 +27,11 @@ def pixels_to_colored_ascii(image, use_color=True):
     for i in range(len(pixels)):
         r, g, b = pixels[i]
         brightness = int((r + g + b) / 3)
-        char = ASCII_CHARS[brightness * len(ASCII_CHARS) // 256]
         if use_color:
+            char = ASCII_CHARS_C[brightness * len(ASCII_CHARS_C) // 256]
             ascii_image += f"\033[38;2;{r};{g};{b}m{char}"
         else:
+            char = ASCII_CHARS_NC[brightness * len(ASCII_CHARS_NC) // 256]
             ascii_image += char
         if (i + 1) % image.width == 0:
             ascii_image += "\n"
