@@ -1,6 +1,6 @@
 [project]
 name = "asciifyy"
-version = "1.0.0"
+version = "1.0.3"
 description = "Convert images to ASCII art in the terminal with optional color."
 readme = "README.md"
 authors = [
