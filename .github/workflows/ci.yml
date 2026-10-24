@@ -72,7 +72,8 @@ jobs:
               asciify /tmp/g.png -w 40 -m blocks --color always > /tmp/out.txt
               grep -q "48;2;" /tmp/out.txt
               asciify /tmp/g.png -o /tmp/out.html && grep -q "<pre>" /tmp/out.html
-              test -f /usr/share/man/man1/asciify.1.gz
+              # Docker images skip unpacking man pages, so check the package lists it
+              dpkg -L asciifyy | grep -q /usr/share/man/man1/asciify.1.gz
               if asciify /tmp/missing.png; then exit 1; fi
               apt-get remove -y -qq asciifyy >/dev/null
               test ! -e /usr/lib/python3/dist-packages/asciify
