@@ -1,0 +1,102 @@
+.TH ASCIIFY 1 "October 2026" "asciify 1.1.0" "User Commands"
+.SH NAME
+asciify \- convert images to ASCII art or colored block art in the terminal
+.SH SYNOPSIS
+.B asciify
+[\fIOPTIONS\fR]
+\fIIMAGE\fR
+.SH DESCRIPTION
+.B asciify
+draws an image in the terminal. In
+.B ascii
+mode each character cell shows one pixel, picked from a ramp of characters by
+brightness and, in color, drawn in the pixel's own 24-bit color. In
+.B blocks
+mode each cell is an upper half block whose foreground and background colors
+show two pixels, which doubles the vertical detail.
+.PP
+.I IMAGE
+is a file in any format Pillow reads (PNG, JPEG, GIF, WebP, BMP, TIFF and
+more), an http or https URL, or
+.B \-
+to read the image from standard input.
+.PP
+On a terminal the output fits the window unless
+.B \-\-width
+is given. Transparent pixels are left blank.
+.SH OPTIONS
+.TP
+.BR \-w ", " \-\-width " " \fIN\fR
+Output width in characters. Default: fit the terminal, or 100 when the output
+is not a terminal.
+.TP
+.BR \-m ", " \-\-mode " " \fBascii\fR|\fBblocks\fR
+Characters by brightness (the default), or half-block cells.
+.TP
+.BR \-\-color " " \fBauto\fR|\fBalways\fR|\fBnever\fR
+.B auto
+(the default) colors output to a terminal unless the
+.B NO_COLOR
+environment variable is set, colors HTML files, and writes plain text
+otherwise.
+.TP
+.BR \-nc ", " \-\-no\-color
+Same as
+.BR "\-\-color never" .
+.TP
+.BR \-i ", " \-\-invert
+Invert brightness, for terminals with a light background.
+.TP
+.BR \-c ", " \-\-chars " " \fIRAMP\fR
+Characters for ascii mode, ordered from least to most ink, for example
+\(aq .:\-=+*#%@\(aq. At least two characters.
+.TP
+.BR \-o ", " \-\-output " " \fIFILE\fR
+Save to
+.I FILE
+instead of printing. A name ending in
+.B .html
+or
+.B .htm
+saves a web page; anything else saves text (with color escapes only with
+.BR "\-\-color always" ).
+.TP
+.BR \-a ", " \-\-animate
+Play an animated GIF or WebP in the terminal. Ctrl+C stops it.
+.TP
+.BR \-\-loop " " \fIN\fR
+With
+.BR \-\-animate ,
+play
+.I N
+times. 0, the default, loops until stopped.
+.TP
+.BR \-V ", " \-\-version
+Print the version and exit.
+.TP
+.BR \-h ", " \-\-help
+Print a summary of the options and exit.
+.SH EXAMPLES
+.nf
+.RS
+asciify photo.jpg
+asciify \-m blocks photo.jpg
+asciify \-w 80 \-\-invert logo.png
+asciify \-a \-\-loop 3 dance.gif
+asciify https://example.com/cat.png \-o cat.html
+curl \-s https://example.com/cat.png | asciify \-
+.RE
+.fi
+.SH ENVIRONMENT
+.TP
+.B NO_COLOR
+When set to a non-empty value,
+.B \-\-color auto
+does not color terminal output.
+.SH EXIT STATUS
+0 on success, 1 when the image can't be read or the output can't be written,
+2 for invalid options.
+.SH AUTHOR
+Written by Mark Mysler.
+.SH SEE ALSO
+https://github.com/markmysler/asciify

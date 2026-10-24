@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: mypy
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: windows-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.13"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest --cov=asciify --cov-report=term-missing
+
+  deb:
+    # Build the .deb, serve it from a signed apt repository, and apt-get install it on real distros
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the package
+        run: sh packaging/debian/build-deb.sh dist
+      - name: Make a signed repository with a throwaway key
+        run: |
+          sudo apt-get install -y -qq apt-utils >/dev/null
+          gpg --batch --passphrase '' --quick-gen-key "asciify CI <ci@example.invalid>" ed25519 sign 1d
+          sh packaging/debian/update-apt-repo.sh site dist/*.deb
+      - name: Install with apt-get on Debian and Ubuntu
+        run: |
+          python3 -m http.server --directory site 8000 >/dev/null 2>&1 &
+          sleep 1
+          for image in debian:12 debian:13 ubuntu:22.04 ubuntu:24.04; do
+            echo "::group::$image"
+            docker run --rm --network host -v "$PWD/site:/site:ro" "$image" sh -euxc '
+              export DEBIAN_FRONTEND=noninteractive
+              install -d -m 0755 /etc/apt/keyrings
+              cp /site/asciify-archive-keyring.gpg /etc/apt/keyrings/asciify.gpg
+              echo "deb [signed-by=/etc/apt/keyrings/asciify.gpg] http://localhost:8000 stable main" > /etc/apt/sources.list.d/asciify.list
+              apt-get update -qq
+              apt-get install -y -qq asciifyy >/dev/null
+              asciify --version
+              python3 -c "from PIL import Image; Image.linear_gradient(\"L\").rotate(90).save(\"/tmp/g.png\")"
+              asciify /tmp/g.png -w 40 -nc
+              asciify /tmp/g.png -w 40 -m blocks --color always > /tmp/out.txt
+              grep -q "48;2;" /tmp/out.txt
+              asciify /tmp/g.png -o /tmp/out.html && grep -q "<pre>" /tmp/out.html
+              test -f /usr/share/man/man1/asciify.1.gz
+              if asciify /tmp/missing.png; then exit 1; fi
+              apt-get remove -y -qq asciifyy >/dev/null
+              test ! -e /usr/lib/python3/dist-packages/asciify
+              apt-get install -y -qq asciify >/dev/null
+              asciify --version
+            '
+            echo "::endgroup::"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: dist/*.deb

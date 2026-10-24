@@ -1,24 +1,65 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "asciifyy"
-version = "1.0.4"
-description = "Convert images to ASCII art in the terminal with optional color."
+dynamic = ["version"]
+description = "Convert images to ASCII art or colored block art in the terminal."
 readme = "README.md"
 authors = [
   { name = "Mark Mysler", email = "myslermark@gmail.com" }
 ]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
 dependencies = [
-  "pillow",
-  "colorama"
+  "pillow>=9.0,<15",
+  "colorama>=0.4.6; platform_system == 'Windows'",
 ]
-requires-python = ">=3.7"
+keywords = ["ascii", "ascii-art", "terminal", "image", "cli", "ansi"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+  "Topic :: Terminals",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff", "mypy", "build"]
 
 [project.scripts]
-asciify = "asciify:main"
-
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+asciify = "asciify.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/markmysler/asciify"
+Source = "https://github.com/markmysler/asciify"
+Issues = "https://github.com/markmysler/asciify/issues"
+Changelog = "https://github.com/markmysler/asciify/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = { attr = "asciify.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+
+[tool.mypy]
+files = ["src"]
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["colorama"]
+ignore_missing_imports = true
