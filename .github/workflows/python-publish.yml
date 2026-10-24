@@ -1,12 +1,9 @@
-# This workflow will upload a Python Package to PyPI when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Upload Python Package
+# Publishing a GitHub Release (tag = the version in src/asciify/__init__.py, e.g. 1.1.0):
+#   1. runs the full CI (tests, lint, .deb install test)
+#   2. publishes the wheel and sdist to PyPI (trusted publishing, no token)
+#   3. attaches the wheel, sdist and .deb to the GitHub Release
+#   4. adds the .deb to the signed apt repository on the gh-pages branch
+name: Release
 
 on:
   release:
@@ -16,47 +13,118 @@ permissions:
   contents: read
 
 jobs:
-  release-build:
-    runs-on: ubuntu-latest
+  tests:
+    uses: ./.github/workflows/ci.yml
 
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+      - name: Tag must match the package version
+        id: check
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' src/asciify/__init__.py)
+          if [ "${TAG#v}" != "$version" ]; then
+            echo "::error::Release tag $TAG does not match __version__ $version. Bump the version first."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
+  build:
+    needs: [tests, version]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-
-      - name: Build release distributions
+      - name: Build the wheel, sdist and .deb
         run: |
           python -m pip install build
           python -m build
-
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
+          sh packaging/debian/build-deb.sh deb
+      - uses: actions/upload-artifact@v4
         with:
-          name: release-dists
+          name: python-dists
           path: dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: deb/
 
   pypi-publish:
+    needs: build
     runs-on: ubuntu-latest
-    needs:
-      - release-build
-    permissions:
-      id-token: write
-
     environment:
       name: pypi
       url: https://pypi.org/p/asciifyy
-
+    permissions:
+      id-token: write
     steps:
-      - name: Retrieve release distributions
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: release-dists
+          name: python-dists
           path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
 
-      - name: Publish release distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+  release-assets:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          packages-dir: dist/
-          password: ${{ secrets.PYPI_TOKEN }}
+          path: assets/
+          merge-multiple: true
+      - name: Attach to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" assets/* --clobber --repo "$GITHUB_REPOSITORY"
+
+  apt-repository:
+    needs: [build, version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Check for the signing key
+        id: key
+        run: |
+          if [ -z "$APT_SIGNING_KEY" ]; then
+            echo "::warning::The APT_SIGNING_KEY secret is not set, so the apt repository was not updated."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.present == 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.key.outputs.present == 'true'
+        with:
+          name: deb
+          path: deb/
+      - name: Update the repository on gh-pages
+        if: steps.key.outputs.present == 'true'
+        run: |
+          sudo apt-get install -y -qq apt-utils >/dev/null
+          printf '%s\n' "$APT_SIGNING_KEY" | gpg --batch --import
+          if git fetch origin gh-pages; then
+            git worktree add -B gh-pages site origin/gh-pages
+          else
+            git worktree add --orphan -b gh-pages site
+          fi
+          sh packaging/debian/update-apt-repo.sh site deb/*.deb
+          cd site
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "asciifyy $VERSION"
+          git push origin gh-pages
