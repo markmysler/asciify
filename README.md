@@ -7,9 +7,11 @@
 
 Turn any image into ASCII art or colored block art, right in your terminal.
 
-| Original | `asciify -w 80` | `asciify -w 80 -m blocks` |
+| Original | `asciify -w 64` | `asciify -w 64 -m blocks` |
 |---|---|---|
-| ![Original image: a sunset over mountains](https://raw.githubusercontent.com/markmysler/asciify/main/docs/example-original.png) | ![The same image as colored ASCII art](https://raw.githubusercontent.com/markmysler/asciify/main/docs/example-ascii.png) | ![The same image as colored half blocks](https://raw.githubusercontent.com/markmysler/asciify/main/docs/example-blocks.png) |
+| ![Original image: the Earth seen from Apollo 17](https://raw.githubusercontent.com/markmysler/asciify/main/docs/example-original.jpg) | ![The Earth as colored ASCII art](https://raw.githubusercontent.com/markmysler/asciify/main/docs/example-ascii.png) | ![The Earth as colored half blocks](https://raw.githubusercontent.com/markmysler/asciify/main/docs/example-blocks.png) |
+
+<sub>"The Blue Marble", Apollo 17, NASA (public domain), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The_Earth_seen_from_Apollo_17.jpg).</sub>
 
 ## Features
 
