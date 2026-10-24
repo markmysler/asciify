@@ -1,0 +1,22 @@
+Package: asciifyy
+Architecture: all
+Version: 1.1.0
+Priority: optional
+Section: graphics
+Maintainer: Mark Mysler <myslermark@gmail.com>
+Installed-Size: 96
+Provides: asciify
+Depends: python3 (>= 3.9), python3-pil
+Filename: pool/main/a/asciifyy/asciifyy_1.1.0_all.deb
+Size: 12092
+MD5sum: 7dd2685853c42fadbacb33aa9db5a6fa
+SHA1: fdb65803af33603bde876dcbe65072ec02382fd7
+SHA256: ad7e00ce033fc3d3f7feeabf387a1a86a5ada67dbb90de39466c0f26ac99dd6d
+SHA512: 0b70b59dfee6b29af34319f153beb379a249f525ace4bda502a1462228e5dee7ffd0adcfd5a2012e3b08baf94dc3978072e40e4e16f7d4ef2746a750c9b6663e
+Homepage: https://github.com/markmysler/asciify
+Description: convert images to ASCII art or colored block art in the terminal
+ asciify turns images (PNG, JPEG, GIF, WebP and anything else Pillow can
+ read) into ASCII art or 24-bit colored half-block art. It fits the output
+ to the terminal, plays animated GIFs, reads files, URLs or standard input,
+ and can save the result as text or as an HTML page.
+
